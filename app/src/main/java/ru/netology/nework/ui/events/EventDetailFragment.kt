@@ -11,11 +11,6 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentEventDetailBinding
@@ -24,12 +19,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @AndroidEntryPoint
-class EventDetailFragment : Fragment(), OnMapReadyCallback {
+class EventDetailFragment : Fragment() {
+    private val args: Bundle by lazy { arguments ?: Bundle() }
+    private val eventId: Long by lazy { args.getLong("eventId", 0L) }
 
     private val viewModel: EventDetailViewModel by viewModels()
     private var _binding: FragmentEventDetailBinding? = null
     private val binding get() = _binding!!
-    private var googleMap: GoogleMap? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,9 +38,6 @@ class EventDetailFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val mapFragment = childFragmentManager.findFragmentById(ru.netology.nework.R.id.map_fragment) as? com.google.android.gms.maps.SupportMapFragment
-        mapFragment?.getMapAsync(this)
 
         val speakersAdapter = EventUsersAdapter()
         binding.speakersRecycler.layoutManager = LinearLayoutManager(requireContext())
@@ -91,7 +84,7 @@ class EventDetailFragment : Fragment(), OnMapReadyCallback {
             }
         }
 
-        viewModel.loadEvent(1L) // TODO: Use args.eventId when navigation is fixed
+        viewModel.loadEvent(eventId)
     }
 
     private fun bindEvent(event: ru.netology.nework.model.Event) {
@@ -131,13 +124,6 @@ class EventDetailFragment : Fragment(), OnMapReadyCallback {
 
             if (MapUtils.isValidCoordinates(event.coords)) {
                 mapCard.visibility = View.VISIBLE
-                googleMap?.let { map ->
-                    MapUtils.addMarkerAndMoveCamera(
-                        map = map,
-                        coordinates = event.coords!!,
-                        title = "Местоположение события"
-                    )
-                }
             } else {
                 mapCard.visibility = View.GONE
             }
@@ -152,20 +138,6 @@ class EventDetailFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-        MapUtils.setupMap(map)
-        
-        viewModel.event.value?.coords?.let { coords ->
-            if (MapUtils.isValidCoordinates(coords)) {
-                MapUtils.addMarkerAndMoveCamera(
-                    map = map,
-                    coordinates = coords,
-                    title = "Местоположение события"
-                )
-            }
-        }
-    }
 
     private fun formatDate(dateString: String): String {
         return try {

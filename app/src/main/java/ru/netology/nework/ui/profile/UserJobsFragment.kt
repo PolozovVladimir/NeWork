@@ -16,6 +16,10 @@ class UserJobsFragment : Fragment() {
     private val viewModel: UserJobsViewModel by viewModels()
     private var _binding: FragmentUserJobsBinding? = null
     private val binding get() = _binding!!
+    
+    private val userId: Long by lazy {
+        (parentFragment as? UserProfileFragment)?.userId ?: 0L
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,8 +41,7 @@ class UserJobsFragment : Fragment() {
             adapter.submitList(jobs)
         }
 
-        // TODO: Get userId from parent fragment
-        viewModel.loadUserJobs(1L)
+        viewModel.loadUserJobs(userId)
     }
 
     override fun onDestroyView() {
@@ -46,6 +49,10 @@ class UserJobsFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
+
 
 
 

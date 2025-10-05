@@ -18,23 +18,3 @@ data class PostDto(
     val ownedByMe: Boolean = false
 )
 
-data class CoordinatesDto(
-    val lat: Double,
-    val lng: Double
-)
-
-data class AttachmentDto(
-    val url: String,
-    val type: String
-)
-
-data class CreatePostRequest(
-    val content: String,
-    val coords: CoordinatesDto? = null,
-    val link: String? = null,
-    val mentionIds: List<Long> = emptyList(),
-    val attachment: AttachmentDto? = null
-)
-
-
-

@@ -53,7 +53,7 @@ class MyProfileFragment : Fragment() {
     }
 
     private fun setupViewPager() {
-        val adapter = MyProfilePagerAdapter(this)
+        val adapter = MyProfilePagerAdapter(requireActivity())
         binding.viewPager.adapter = adapter
 
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->

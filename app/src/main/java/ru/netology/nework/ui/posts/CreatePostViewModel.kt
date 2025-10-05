@@ -32,35 +32,45 @@ class CreatePostViewModel @Inject constructor(
 
     fun createPost(content: String, link: String? = null, attachment: ru.netology.nework.model.Attachment? = null, coordinates: ru.netology.nework.model.Coordinates? = null) {
         viewModelScope.launch {
-            val attachmentDto = attachment?.let {
-                AttachmentDto(
-                    url = it.url,
-                    type = it.type.name
-                )
-            }
-
-            val coordsDto = coordinates?.let {
-                ru.netology.nework.dto.CoordinatesDto(
-                    lat = it.lat,
-                    lng = it.lng
-                )
-            }
-
-            val request = CreatePostRequest(
-                content = content,
-                link = link,
-                coords = coordsDto,
-                mentionIds = emptyList(), // TODO: Add mentions
-                attachment = attachmentDto
-            )
-
-            postRepository.createPost(request)
-                .onSuccess {
-                    _postCreated.value = true
+            try {
+                android.util.Log.d("CreatePostViewModel", "Creating post: content=$content, link=$link")
+                
+                val attachmentDto = attachment?.let {
+                    AttachmentDto(
+                        url = it.url,
+                        type = it.type.name
+                    )
                 }
-                .onFailure { exception ->
-                    _error.value = "Ошибка при создании поста: ${exception.message}"
+
+                val coordsDto = coordinates?.let {
+                    ru.netology.nework.dto.CoordinatesDto(
+                        lat = it.lat,
+                        lng = it.lng
+                    )
                 }
+
+                val request = CreatePostRequest(
+                    content = content,
+                    link = link,
+                    coords = coordsDto,
+                    mentionIds = emptyList(),
+                    attachment = attachmentDto
+                )
+
+                android.util.Log.d("CreatePostViewModel", "Sending request to repository")
+                postRepository.createPost(request)
+                    .onSuccess {
+                        android.util.Log.d("CreatePostViewModel", "Post created successfully")
+                        _postCreated.value = true
+                    }
+                    .onFailure { exception ->
+                        android.util.Log.e("CreatePostViewModel", "Failed to create post", exception)
+                        _error.value = "Ошибка при создании поста: ${exception.message}"
+                    }
+            } catch (e: Exception) {
+                android.util.Log.e("CreatePostViewModel", "Exception in createPost", e)
+                _error.value = "Ошибка при создании поста: ${e.message}"
+            }
         }
     }
 
@@ -70,10 +80,10 @@ class CreatePostViewModel @Inject constructor(
             val result = mediaRepository.uploadMedia(file)
             _uploading.value = false
             
-            result.map { mediaResponse ->
-                Attachment(
+            result.map { mediaResponse: ru.netology.nework.dto.MediaResponse ->
+                ru.netology.nework.model.Attachment(
                     url = mediaResponse.url,
-                    type = AttachmentType.IMAGE // TODO: Determine type based on file extension
+                    type = ru.netology.nework.model.AttachmentType.IMAGE
                 )
             }
         } catch (e: Exception) {

@@ -63,18 +63,18 @@ class CreatePostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        android.util.Log.d("CreatePostFragment", "Fragment created")
+
                            binding.selectImageButton.setOnClickListener {
                        val intent = MediaUtils.createImagePickerIntent()
                        imagePickerLauncher.launch(intent)
                    }
 
         binding.selectAudioButton.setOnClickListener {
-            // TODO: Implement audio selection
             Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
         }
 
         binding.selectVideoButton.setOnClickListener {
-            // TODO: Implement video selection
             Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
         }
 
@@ -83,8 +83,7 @@ class CreatePostFragment : Fragment() {
         }
 
         binding.selectMentionsButton.setOnClickListener {
-            // TODO: Implement mentions selection
-            Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.selectUsersFragment)
         }
 
         viewModel.postCreated.observe(viewLifecycleOwner) { created ->
@@ -104,6 +103,14 @@ class CreatePostFragment : Fragment() {
             selectedCoordinates = ru.netology.nework.model.Coordinates(lat, lng)
             binding.selectLocationButton.text = "Место выбрано"
             Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
+        }
+
+        parentFragmentManager.setFragmentResultListener("users_selected", viewLifecycleOwner) { _, result ->
+            val selectedUsers = result.getParcelableArray("selected_users") as? Array<ru.netology.nework.model.User>
+            if (!selectedUsers.isNullOrEmpty()) {
+                binding.selectMentionsButton.text = "Выбрано: ${selectedUsers.size}"
+                Toast.makeText(requireContext(), "Выбрано пользователей: ${selectedUsers.size}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

@@ -16,13 +16,26 @@ class PostRepository @Inject constructor(
     
     fun getPosts(): Flow<List<Post>> = flow {
         try {
+            android.util.Log.d("PostRepository", "Starting to fetch posts...")
             val response = apiService.getPosts()
+            android.util.Log.d("PostRepository", "Response received: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+            
             if (response.isSuccessful) {
-                emit(response.body()?.map { it.toModel() } ?: emptyList())
+                val posts = response.body()?.map { it.toModel() } ?: emptyList()
+                android.util.Log.d("PostRepository", "Posts converted successfully: ${posts.size} posts")
+                emit(posts)
             } else {
+                val code = response.code()
+                val errorMessage = when (code) {
+                    401 -> "Не авторизован (401) - токен недействителен"
+                    403 -> "Доступ запрещен (403) - проблема с API ключом или токеном"
+                    else -> "Ошибка получения постов: $code"
+                }
+                android.util.Log.e("PostRepository", "Failed to get posts: $errorMessage")
                 emit(emptyList())
             }
         } catch (e: Exception) {
+            android.util.Log.e("PostRepository", "Exception getting posts", e)
             emit(emptyList())
         }
     }
@@ -42,13 +55,20 @@ class PostRepository @Inject constructor(
 
     suspend fun createPost(post: CreatePostRequest): Result<Post> {
         return try {
+            android.util.Log.d("PostRepository", "Creating post: content=${post.content}, link=${post.link}")
             val response = apiService.createPost(post)
+            android.util.Log.d("PostRepository", "Create post response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
+            
             if (response.isSuccessful) {
-                Result.success(response.body()!!.toModel())
+                val createdPost = response.body()!!.toModel()
+                android.util.Log.d("PostRepository", "Post created successfully: id=${createdPost.id}")
+                Result.success(createdPost)
             } else {
-                Result.failure(Exception("Failed to create post"))
+                android.util.Log.e("PostRepository", "Failed to create post: code=${response.code()}, body reading skipped to avoid EOFException")
+                Result.failure(Exception("Failed to create post: ${response.code()}"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("PostRepository", "Exception creating post", e)
             Result.failure(e)
         }
     }
@@ -73,7 +93,13 @@ class PostRepository @Inject constructor(
             if (response.isSuccessful) {
                 Result.success(response.body()!!.toModel())
             } else {
-                Result.failure(Exception("Failed to like post"))
+                val code = response.code()
+                val error = when (code) {
+                    401 -> "Не авторизован (401)"
+                    403 -> "Доступ запрещен (403)"
+                    else -> "Ошибка лайка: code=$code"
+                }
+                Result.failure(Exception(error))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -86,7 +112,13 @@ class PostRepository @Inject constructor(
             if (response.isSuccessful) {
                 Result.success(response.body()!!.toModel())
             } else {
-                Result.failure(Exception("Failed to unlike post"))
+                val code = response.code()
+                val error = when (code) {
+                    401 -> "Не авторизован (401)"
+                    403 -> "Доступ запрещен (403)"
+                    else -> "Ошибка снятия лайка: code=$code"
+                }
+                Result.failure(Exception(error))
             }
         } catch (e: Exception) {
             Result.failure(e)

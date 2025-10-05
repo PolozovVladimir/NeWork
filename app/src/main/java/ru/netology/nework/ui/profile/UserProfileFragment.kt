@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
@@ -14,6 +13,9 @@ import ru.netology.nework.databinding.FragmentUserProfileBinding
 
 @AndroidEntryPoint
 class UserProfileFragment : Fragment() {
+    val userId: Long by lazy {
+        arguments?.getLong("userId", 0L) ?: 0L 
+    }
 
     private val viewModel: UserProfileViewModel by viewModels()
     private var _binding: FragmentUserProfileBinding? = null
@@ -35,7 +37,7 @@ class UserProfileFragment : Fragment() {
         setupViewPager()
         observeViewModel()
 
-        viewModel.loadUser(1L) // TODO: Use args.userId when navigation is fixed
+        viewModel.loadUser(userId)
     }
 
     private fun setupToolbar() {

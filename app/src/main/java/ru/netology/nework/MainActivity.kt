@@ -35,6 +35,16 @@ class MainActivity : AppCompatActivity() {
 
         setupToolbar()
         setupNavigation()
+        checkAuthentication()
+    }
+
+    private fun checkAuthentication() {
+        if (!authRepository.isAuthenticated()) {
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+            val navController = navHostFragment.navController
+            navController.navigate(R.id.loginFragment)
+        }
     }
 
     private fun setupToolbar() {
@@ -48,6 +58,24 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigationView.setupWithNavController(navController)
+
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.postsFragment -> {
+                    navController.navigate(R.id.postsFragment)
+                    true
+                }
+                R.id.eventsFragment -> {
+                    navController.navigate(R.id.eventsFragment)
+                    true
+                }
+                R.id.usersFragment -> {
+                    navController.navigate(R.id.usersFragment)
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

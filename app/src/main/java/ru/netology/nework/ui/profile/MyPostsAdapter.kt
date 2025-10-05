@@ -35,12 +35,9 @@ class MyPostsAdapter : ListAdapter<Post, MyPostsAdapter.PostViewHolder>(PostDiff
                 if (post.likedByMe) ru.netology.nework.R.drawable.ic_like_filled else ru.netology.nework.R.drawable.ic_like
             )
 
-            // TODO: Load avatar with Glide
-            // TODO: Load attachment if present
 
             binding.menuButton.visibility = android.view.View.VISIBLE
             binding.menuButton.setOnClickListener {
-                // TODO: Show edit/delete menu
             }
         }
 

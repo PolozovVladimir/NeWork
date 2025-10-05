@@ -32,7 +32,6 @@ class EventUsersAdapter : ListAdapter<User, EventUsersAdapter.EventUserViewHolde
                 name.text = user.name
                 login.text = "@${user.login}"
 
-                // TODO: Load avatar with Glide
             }
         }
     }
@@ -47,6 +46,10 @@ class EventUsersAdapter : ListAdapter<User, EventUsersAdapter.EventUserViewHolde
         }
     }
 }
+
+
+
+
 
 
 

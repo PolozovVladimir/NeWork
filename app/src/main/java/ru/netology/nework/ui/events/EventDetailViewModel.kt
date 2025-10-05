@@ -107,3 +107,11 @@ class EventDetailViewModel @Inject constructor(
 
 
 
+
+
+
+
+
+
+
+

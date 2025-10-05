@@ -25,7 +25,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.login(login, password)
                 .onFailure { exception ->
-                    _error.value = "Неправильный логин или пароль"
+                    _error.value = exception.message ?: "Ошибка авторизации"
                 }
         }
     }

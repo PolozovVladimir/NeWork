@@ -11,11 +11,6 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.databinding.FragmentPostDetailBinding
 import ru.netology.nework.util.MapUtils
@@ -23,12 +18,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @AndroidEntryPoint
-class PostDetailFragment : Fragment(), OnMapReadyCallback {
+class PostDetailFragment : Fragment() {
+    private val args: Bundle by lazy { arguments ?: Bundle() }
+    private val postId: Long by lazy { args.getLong("postId", 0L) }
 
     private val viewModel: PostDetailViewModel by viewModels()
     private var _binding: FragmentPostDetailBinding? = null
     private val binding get() = _binding!!
-    private var googleMap: GoogleMap? = null
 
     override fun onCreateView(
 
@@ -42,9 +38,6 @@ class PostDetailFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val mapFragment = childFragmentManager.findFragmentById(ru.netology.nework.R.id.map_fragment) as? com.google.android.gms.maps.SupportMapFragment
-        mapFragment?.getMapAsync(this)
 
         val mentionedUsersAdapter = MentionedUsersAdapter()
         binding.mentionedUsersRecycler.layoutManager = LinearLayoutManager(requireContext())
@@ -73,7 +66,7 @@ class PostDetailFragment : Fragment(), OnMapReadyCallback {
                 binding.mentionedUsersCard.visibility = View.GONE
             }
         }
-        viewModel.loadPost(1L) // TODO: Use args.postId when navigation is fixed
+        viewModel.loadPost(postId)
     }
 
     private fun bindPost(post: ru.netology.nework.model.Post) {
@@ -108,13 +101,6 @@ class PostDetailFragment : Fragment(), OnMapReadyCallback {
 
             if (MapUtils.isValidCoordinates(post.coords)) {
                 mapCard.visibility = View.VISIBLE
-                googleMap?.let { map ->
-                    MapUtils.addMarkerAndMoveCamera(
-                        map = map,
-                        coordinates = post.coords!!,
-                        title = "Местоположение поста"
-                    )
-                }
             } else {
                 mapCard.visibility = View.GONE
             }
@@ -125,20 +111,6 @@ class PostDetailFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-        MapUtils.setupMap(map)
-        
-        viewModel.post.value?.coords?.let { coords ->
-            if (MapUtils.isValidCoordinates(coords)) {
-                MapUtils.addMarkerAndMoveCamera(
-                    map = map,
-                    coordinates = coords,
-                    title = "Местоположение поста"
-                )
-            }
-        }
-    }
 
     private fun formatDate(dateString: String): String {
         return try {

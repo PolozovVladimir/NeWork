@@ -20,7 +20,6 @@ class UserWallViewModel @Inject constructor(
 
     fun loadUserPosts(userId: Long) {
         viewModelScope.launch {
-            // TODO: Implement getUserPosts in repository
 
             _posts.value = emptyList()
         }

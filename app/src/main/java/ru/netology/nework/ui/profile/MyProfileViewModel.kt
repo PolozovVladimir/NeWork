@@ -27,11 +27,28 @@ class MyProfileViewModel @Inject constructor(
     fun loadMyProfile() {
         viewModelScope.launch {
             val currentUserId = authRepository.authState.value.id
+            android.util.Log.d("MyProfileViewModel", "Loading profile for user ID: $currentUserId")
+            
             if (currentUserId != 0L) {
                 userRepository.getUserById(currentUserId)
                     .onSuccess { user ->
+                        android.util.Log.d("MyProfileViewModel", "User loaded: ${user.name} (${user.login})")
                         _user.value = user
                     }
+                    .onFailure { exception ->
+                        android.util.Log.e("MyProfileViewModel", "Failed to load user profile", exception)
+                        // Создаем fallback пользователя с базовой информацией
+                        val fallbackUser = User(
+                            id = currentUserId,
+                            login = "user",
+                            name = "Пользователь",
+                            avatar = null
+                        )
+                        _user.value = fallbackUser
+                        android.util.Log.d("MyProfileViewModel", "Using fallback user data")
+                    }
+            } else {
+                android.util.Log.w("MyProfileViewModel", "No user ID available")
             }
         }
     }
@@ -41,6 +58,10 @@ class MyProfileViewModel @Inject constructor(
         _authState.value = AuthState()
     }
 }
+
+
+
+
 
 
 

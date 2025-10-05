@@ -90,7 +90,7 @@ class RegisterFragment : Fragment() {
 
         viewModel.authState.observe(viewLifecycleOwner) { authState ->
             if (authState.token != null) {
-                findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
+                findNavController().navigate(R.id.action_registerFragment_to_postsFragment)
             }
         }
 

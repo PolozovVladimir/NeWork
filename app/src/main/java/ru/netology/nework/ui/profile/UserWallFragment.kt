@@ -16,6 +16,9 @@ class UserWallFragment : Fragment() {
     private val viewModel: UserWallViewModel by viewModels()
     private var _binding: FragmentUserWallBinding? = null
     private val binding get() = _binding!!
+    private val userId: Long by lazy {
+        (parentFragment as? UserProfileFragment)?.userId ?: 0L
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,8 +40,7 @@ class UserWallFragment : Fragment() {
             adapter.submitList(posts)
         }
 
-        // TODO: Get userId from parent fragment
-        viewModel.loadUserPosts(1L)
+        viewModel.loadUserPosts(userId)
     }
 
     override fun onDestroyView() {
@@ -46,6 +48,10 @@ class UserWallFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
+
 
 
 

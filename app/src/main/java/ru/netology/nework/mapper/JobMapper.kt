@@ -12,4 +12,14 @@ fun JobDto.toModel(): Job = Job(
     link = link
 )
 
+fun Job.toDto(): JobDto = JobDto(
+    id = id,
+    name = name,
+    position = position,
+    start = start,
+    finish = finish,
+    link = link
+)
+
+
 

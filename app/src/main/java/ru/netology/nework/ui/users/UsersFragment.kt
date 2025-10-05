@@ -31,11 +31,14 @@ class UsersFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-                           val adapter = UsersAdapter(
-                       onUserClick = { user ->
-                           findNavController().navigate(R.id.userProfileFragment)
-                       }
-                   )
+        val adapter = UsersAdapter(
+            onUserClick = { user ->
+                val bundle = Bundle().apply {
+                    putLong("userId", user.id)
+                }
+                findNavController().navigate(R.id.action_usersFragment_to_userProfileFragment, bundle)
+            }
+        )
 
         binding.usersRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.usersRecycler.adapter = adapter

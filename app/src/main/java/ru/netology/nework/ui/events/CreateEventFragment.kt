@@ -116,17 +116,14 @@ class CreateEventFragment : Fragment() {
 
     private fun setupMediaButtons() {
         binding.selectImageButton.setOnClickListener {
-            // TODO: Implement image selection
             Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
         }
 
         binding.selectAudioButton.setOnClickListener {
-            // TODO: Implement audio selection
             Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
         }
 
         binding.selectVideoButton.setOnClickListener {
-            // TODO: Implement video selection
             Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
         }
     }
@@ -137,7 +134,6 @@ class CreateEventFragment : Fragment() {
         }
 
         binding.selectSpeakersButton.setOnClickListener {
-            // TODO: Implement speakers selection
             Toast.makeText(requireContext(), "Будет реализовано позже", Toast.LENGTH_SHORT).show()
         }
     }
@@ -153,7 +149,6 @@ class CreateEventFragment : Fragment() {
             Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
         }
 
-        // Обработка результата выбора местоположения
         parentFragmentManager.setFragmentResultListener("location_result", viewLifecycleOwner) { _, result ->
             val lat = result.getDouble("lat")
             val lng = result.getDouble("lng")

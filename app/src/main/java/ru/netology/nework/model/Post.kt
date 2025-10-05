@@ -28,14 +28,5 @@ data class Coordinates(
     val lng: Double
 ) : Parcelable
 
-@Parcelize
-data class Attachment(
-    val url: String,
-    val type: AttachmentType
-) : Parcelable
-
-enum class AttachmentType {
-    IMAGE, VIDEO, AUDIO
-}
 
 

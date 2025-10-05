@@ -1,5 +1,6 @@
 package ru.netology.nework.ui.auth
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,10 +23,15 @@ class RegisterViewModel @Inject constructor(
     val error: LiveData<String> = _error
 
     fun register(login: String, password: String, name: String) {
+        Log.d("RegisterViewModel", "Начало регистрации: login=$login, name=$name")
         viewModelScope.launch {
             authRepository.register(login, password, name)
+                .onSuccess { authDto ->
+                    Log.d("RegisterViewModel", "Регистрация успешна: id=${authDto.id}")
+                }
                 .onFailure { exception ->
-                    _error.value = "Пользователь с таким логином уже зарегистрирован"
+                    Log.e("RegisterViewModel", "Ошибка регистрации", exception)
+                    _error.value = "Ошибка регистрации: ${exception.message}"
                 }
         }
     }

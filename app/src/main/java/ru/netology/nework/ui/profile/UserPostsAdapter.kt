@@ -34,8 +34,6 @@ class UserPostsAdapter : ListAdapter<Post, UserPostsAdapter.PostViewHolder>(Post
                 if (post.likedByMe) ru.netology.nework.R.drawable.ic_like_filled else ru.netology.nework.R.drawable.ic_like
             )
 
-            // TODO: Load avatar with Glide
-            // TODO: Load attachment if present
             binding.menuButton.visibility = android.view.View.GONE
         }
 

@@ -43,7 +43,7 @@ class CreateEventViewModel @Inject constructor(
                 coords = coordsDto,
                 type = type,
                 speakerIds = speakerIds,
-                attachment = null, // TODO: Implement attachments
+                attachment = null,
                 link = link
             )
             

@@ -35,7 +35,6 @@ class UsersAdapter(
                 name.text = user.name
                 login.text = "@${user.login}"
 
-                // TODO: Load avatar with Glide
 
                 root.setOnClickListener { onUserClick(user) }
             }
@@ -52,6 +51,10 @@ class UsersAdapter(
         }
     }
 }
+
+
+
+
 
 
 

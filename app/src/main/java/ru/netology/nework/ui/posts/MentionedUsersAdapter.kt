@@ -32,7 +32,6 @@ class MentionedUsersAdapter : ListAdapter<User, MentionedUsersAdapter.MentionedU
                 name.text = user.name
                 login.text = "@${user.login}"
 
-                // TODO: Load avatar with Glide
             }
         }
     }
@@ -47,6 +46,10 @@ class MentionedUsersAdapter : ListAdapter<User, MentionedUsersAdapter.MentionedU
         }
     }
 }
+
+
+
+
 
 
 

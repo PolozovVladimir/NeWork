@@ -21,6 +21,9 @@ class PostsViewModel @Inject constructor(
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
+    private val _deletedPostId = MutableLiveData<Long>()
+    val deletedPostId: LiveData<Long> = _deletedPostId
+
     fun likePost(postId: Long) {
         viewModelScope.launch {
             val currentPosts = posts.value ?: return@launch
@@ -37,6 +40,14 @@ class PostsViewModel @Inject constructor(
                         _error.value = "Ошибка при добавлении лайка: ${exception.message}"
                     }
             }
+        }
+    }
+
+    fun deletePost(postId: Long) {
+        viewModelScope.launch {
+            postRepository.deletePost(postId)
+                .onSuccess { _deletedPostId.value = postId }
+                .onFailure { exception -> _error.value = "Ошибка удаления: ${exception.message}" }
         }
     }
 }

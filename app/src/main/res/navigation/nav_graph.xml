@@ -75,6 +75,11 @@
         <action
             android:id="@+id/action_registerFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_registerFragment_to_postsFragment"
+            app:destination="@id/postsFragment"
+            app:popUpTo="@id/registerFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- Post Details -->
@@ -96,6 +101,9 @@
         <action
             android:id="@+id/action_createPostFragment_to_locationPickerFragment"
             app:destination="@id/locationPickerFragment" />
+        <action
+            android:id="@+id/action_createPostFragment_to_selectUsersFragment"
+            app:destination="@id/selectUsersFragment" />
     </fragment>
 
     <!-- Event Details -->
@@ -153,5 +161,12 @@
         android:name="ru.netology.nework.ui.location.LocationPickerFragment"
         android:label="Выбор местоположения"
         tools:layout="@layout/fragment_location_picker" />
+
+    <!-- Select Users -->
+    <fragment
+        android:id="@+id/selectUsersFragment"
+        android:name="ru.netology.nework.ui.users.SelectUsersFragment"
+        android:label="Выбор пользователей"
+        tools:layout="@layout/fragment_select_users" />
 
 </navigation>

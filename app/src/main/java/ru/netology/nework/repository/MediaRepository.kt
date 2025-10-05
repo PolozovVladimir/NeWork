@@ -8,7 +8,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nework.api.MediaApiService
-import ru.netology.nework.api.MediaResponse
+import ru.netology.nework.dto.MediaResponse
 import ru.netology.nework.util.MediaUtils
 import java.io.File
 import javax.inject.Inject
@@ -55,6 +55,10 @@ class MediaRepository @Inject constructor(
         return MediaUtils.copyFileToCache(context, uri)
     }
 }
+
+
+
+
 
 
 

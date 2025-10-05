@@ -39,7 +39,7 @@ class CreateJobViewModel @Inject constructor(
             }
 
             val newJob = Job(
-                id = 0, // Will be ignored by server for creation
+                id = 0,
                 name = companyName,
                 position = position,
                 start = startDate,

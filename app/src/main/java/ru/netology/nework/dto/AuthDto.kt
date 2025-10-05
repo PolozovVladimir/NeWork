@@ -4,5 +4,3 @@ data class AuthDto(
     val id: Long,
     val token: String
 )
-
-

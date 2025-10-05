@@ -12,7 +12,7 @@ import java.io.InputStream
 
 object MediaUtils {
     
-    const val MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
+    const val MAX_FILE_SIZE = 15 * 1024 * 1024
     
     fun createImagePickerIntent(): Intent {
         return Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
@@ -68,6 +68,10 @@ object MediaUtils {
         return context.contentResolver.getType(uri)?.substringAfter("/")
     }
 }
+
+
+
+
 
 
 

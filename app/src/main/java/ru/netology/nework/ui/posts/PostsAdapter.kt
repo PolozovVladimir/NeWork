@@ -5,6 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import android.content.Intent
+import android.net.Uri
 import ru.netology.nework.databinding.ItemPostBinding
 import ru.netology.nework.model.Post
 import java.text.SimpleDateFormat
@@ -13,7 +16,7 @@ import java.util.*
 class PostsAdapter(
     private val onPostClick: (Post) -> Unit,
     private val onLikeClick: (Post) -> Unit,
-    private val onMenuClick: (Post) -> Unit
+    private val onMenuClick: (android.view.View, Post) -> Unit
 ) : ListAdapter<Post, PostsAdapter.PostViewHolder>(PostDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
@@ -33,7 +36,7 @@ class PostsAdapter(
         private val binding: ItemPostBinding,
         private val onPostClick: (Post) -> Unit,
         private val onLikeClick: (Post) -> Unit,
-        private val onMenuClick: (Post) -> Unit
+        private val onMenuClick: (android.view.View, Post) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(post: Post) {
@@ -46,12 +49,42 @@ class PostsAdapter(
                     if (post.likedByMe) ru.netology.nework.R.drawable.ic_like_filled else ru.netology.nework.R.drawable.ic_like
                 )
 
-                // TODO: Load avatar with Glide
-                // TODO: Load attachment if present
+                if (post.authorAvatar != null) {
+                    Glide.with(avatar)
+                        .load(post.authorAvatar)
+                        .circleCrop()
+                        .into(avatar)
+                } else {
+                    avatar.setImageResource(ru.netology.nework.R.drawable.ic_avatar_placeholder)
+                }
+
+                if (post.attachment != null) {
+                    attachmentContainer.visibility = android.view.View.VISIBLE
+                    Glide.with(attachmentImage)
+                        .load(post.attachment.url)
+                        .centerCrop()
+                        .into(attachmentImage)
+                } else {
+                    attachmentContainer.visibility = android.view.View.GONE
+                }
+
+                if (!post.link.isNullOrBlank()) {
+                    link.visibility = android.view.View.VISIBLE
+                    val linkUrl = link.findViewById<android.widget.TextView>(ru.netology.nework.R.id.linkUrl)
+                    linkUrl.text = post.link
+                    link.setOnClickListener {
+                        val context = it.context
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(post.link))
+                        context.startActivity(intent)
+                    }
+                } else {
+                    link.visibility = android.view.View.GONE
+                    link.setOnClickListener(null)
+                }
 
                 root.setOnClickListener { onPostClick(post) }
                 likeButton.setOnClickListener { onLikeClick(post) }
-                menuButton.setOnClickListener { onMenuClick(post) }
+                menuButton.setOnClickListener { view -> onMenuClick(view, post) }
             }
         }
 

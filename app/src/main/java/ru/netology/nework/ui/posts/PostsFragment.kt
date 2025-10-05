@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import android.widget.PopupMenu
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentPostsBinding
 
@@ -31,27 +32,44 @@ class PostsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-                           val adapter = PostsAdapter(
-                       onPostClick = { post ->
-                           findNavController().navigate(R.id.postDetailFragment)
-                       },
+        val adapter = PostsAdapter(
+            onPostClick = { post ->
+                val bundle = Bundle().apply {
+                    putLong("postId", post.id)
+                }
+                findNavController().navigate(R.id.action_postsFragment_to_postDetailFragment, bundle)
+            },
             onLikeClick = { post ->
                 viewModel.likePost(post.id)
             },
-            onMenuClick = { post ->
-                // TODO: Show menu
+            onMenuClick = { view, post ->
+                val popup = PopupMenu(requireContext(), view)
+                popup.menu.add(0, 1, 0, "Удалить")
+                popup.setOnMenuItemClickListener { item ->
+                    if (item.itemId == 1) {
+                        viewModel.deletePost(post.id.toLong())
+                        true
+                    } else false
+                }
+                popup.show()
             }
         )
 
-        binding.postsRecycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.postsRecycler.adapter = adapter
+        binding.list.layoutManager = LinearLayoutManager(requireContext())
+        binding.list.adapter = adapter
 
         binding.fab.setOnClickListener {
             findNavController().navigate(R.id.action_postsFragment_to_createPostFragment)
         }
 
         viewModel.posts.observe(viewLifecycleOwner) { posts ->
+            android.util.Log.d("PostsFragment", "Posts received: ${posts.size}")
             adapter.submitList(posts)
+        }
+
+        viewModel.deletedPostId.observe(viewLifecycleOwner) { deletedId ->
+            val current = viewModel.posts.value ?: return@observe
+            adapter.submitList(current.filter { it.id != deletedId })
         }
 
         viewModel.error.observe(viewLifecycleOwner) { error ->

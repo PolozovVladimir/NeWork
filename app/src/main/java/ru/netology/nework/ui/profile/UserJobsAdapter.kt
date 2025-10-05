@@ -27,24 +27,20 @@ class UserJobsAdapter : ListAdapter<Job, UserJobsAdapter.JobViewHolder>(JobDiffC
 
         fun bind(job: Job) {
             binding.apply {
-                companyName.text = job.name
+                company.text = job.name
                 position.text = job.position
-                period.text = formatPeriod(job.start, job.finish)
+                startDate.text = formatDate(job.start)
+                endDate.text = if (job.finish != null) formatDate(job.finish) else "настоящее время"
 
                 if (!job.link.isNullOrBlank()) {
-                    jobLink.visibility = android.view.View.VISIBLE
-                    jobLink.text = job.link
+                    link.visibility = android.view.View.VISIBLE
+                    link.text = job.link
                 } else {
-                    jobLink.visibility = android.view.View.GONE
+                    link.visibility = android.view.View.GONE
                 }
             }
         }
 
-        private fun formatPeriod(start: String, finish: String?): String {
-            val startFormatted = formatDate(start)
-            val finishFormatted = if (finish != null) formatDate(finish) else "настоящее время"
-            return "$startFormatted - $finishFormatted"
-        }
 
         private fun formatDate(dateString: String): String {
             return try {
@@ -68,6 +64,9 @@ class UserJobsAdapter : ListAdapter<Job, UserJobsAdapter.JobViewHolder>(JobDiffC
         }
     }
 }
+
+
+
 
 
 

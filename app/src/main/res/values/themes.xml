@@ -6,4 +6,15 @@
     </style>
 
     <style name="Theme.NeWork" parent="Base.Theme.NeWork" />
+
+    <!-- ImageView Styles -->
+    <style name="CircularImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="RoundedImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
 </resources>
