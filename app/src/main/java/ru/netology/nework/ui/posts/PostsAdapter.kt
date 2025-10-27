@@ -69,17 +69,16 @@ class PostsAdapter(
                 }
 
                 if (!post.link.isNullOrBlank()) {
-                    link.visibility = android.view.View.VISIBLE
-                    val linkUrl = link.findViewById<android.widget.TextView>(ru.netology.nework.R.id.linkUrl)
-                    linkUrl.text = post.link
-                    link.setOnClickListener {
+                    binding.link.visibility = android.view.View.VISIBLE
+                    binding.linkUrl.text = post.link
+                    binding.link.setOnClickListener {
                         val context = it.context
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(post.link))
                         context.startActivity(intent)
                     }
                 } else {
-                    link.visibility = android.view.View.GONE
-                    link.setOnClickListener(null)
+                    binding.link.visibility = android.view.View.GONE
+                    binding.link.setOnClickListener(null)
                 }
 
                 root.setOnClickListener { onPostClick(post) }

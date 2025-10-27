@@ -1,16 +1,26 @@
 package ru.netology.nework.api
 
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 import ru.netology.nework.dto.*
 
 interface ApiService {
+    @FormUrlEncoded
     @POST("api/users/authentication")
-    suspend fun login(@Body authRequest: AuthRequest): Response<AuthDto>
+    suspend fun login(
+        @Field("login") login: String,
+        @Field("password") password: String
+    ): Response<AuthDto>
 
+    @FormUrlEncoded
     @POST("api/users/registration")
-    suspend fun register(@Body registerRequest: RegisterRequest): Response<AuthDto>
+    suspend fun register(
+        @Field("login") login: String,
+        @Field("password") password: String,
+        @Field("name") name: String
+    ): Response<AuthDto>
 
     @GET("api/posts")
     suspend fun getPosts(): Response<List<PostDto>>

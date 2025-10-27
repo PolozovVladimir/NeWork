@@ -51,6 +51,9 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
+    
+    // Fragment
+    implementation(libs.androidx.fragment.ktx)
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NeWork</string>
+    <string name="api_key">c1378193-bc0e-42c8-a502-b8d66d189617</string>
+    <string name="base_url">http://94.228.125.136:8080/</string>
 </resources>

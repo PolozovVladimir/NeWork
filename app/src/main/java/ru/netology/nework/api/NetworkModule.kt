@@ -10,6 +10,7 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.Protocol
+import okhttp3.ResponseBody
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.google.gson.Gson
@@ -87,11 +88,25 @@ object NetworkModule {
                    android.util.Log.d("BearerInterceptor", "Token available: ${!token.isNullOrBlank()}")
                    android.util.Log.d("BearerInterceptor", "Token value: ${token?.take(20)}...")
                    
+                   
                    if (!token.isNullOrBlank()) {
                        builder.addHeader("Authorization", "Bearer $token")
                        android.util.Log.d("BearerInterceptor", "Added Bearer token to request")
                    } else {
                        android.util.Log.d("BearerInterceptor", "No token available, skipping Bearer header")
+                   }
+                   
+                   val originalRequest = chain.request()
+                   android.util.Log.d("BearerInterceptor", "Request body type: ${originalRequest.body?.javaClass?.simpleName}")
+                   if (originalRequest.body != null) {
+                       try {
+                           val buffer = okio.Buffer()
+                           originalRequest.body!!.writeTo(buffer)
+                           val bodyString = buffer.readUtf8()
+                           android.util.Log.d("BearerInterceptor", "Request body: $bodyString")
+                       } catch (e: Exception) {
+                           android.util.Log.e("BearerInterceptor", "Failed to read request body", e)
+                       }
                    }
                    
                    val request = builder.build()
@@ -104,7 +119,7 @@ object NetworkModule {
                        
                        if (!response.isSuccessful) {
                            android.util.Log.e("BearerInterceptor", "Request failed with code: ${response.code}")
-                           android.util.Log.e("BearerInterceptor", "Response body reading skipped to avoid EOFException")
+                           // Не пытаемся читать тело ответа, чтобы избежать EOFException
                        }
                        
                        response
@@ -119,7 +134,7 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.NONE
         }
     }
 
@@ -155,7 +170,31 @@ object NetworkModule {
                     .build()
             }
             
-            chain.proceed(newRequest)
+            val response = chain.proceed(newRequest)
+            
+            // Принудительно обрабатываем chunked ответы
+            if (response.header("Transfer-Encoding") == "chunked") {
+                val responseBody = response.body
+                if (responseBody != null) {
+                    try {
+                        val bodyString = responseBody.string()
+                        val newResponseBody = ResponseBody.create(
+                            responseBody.contentType(),
+                            bodyString.toByteArray()
+                        )
+                        return@Interceptor response.newBuilder()
+                            .removeHeader("Transfer-Encoding")
+                            .addHeader("Content-Length", bodyString.length.toString())
+                            .body(newResponseBody)
+                            .build()
+                    } catch (e: Exception) {
+                        android.util.Log.e("ChunkedDisableInterceptor", "Error reading chunked response", e)
+                        return@Interceptor response
+                    }
+                }
+            }
+            
+            response
         }
     }
 
@@ -164,11 +203,13 @@ object NetworkModule {
     fun provideOkHttpClient(
         @Named("auth") authInterceptor: Interceptor,
         @Named("bearer") bearerInterceptor: Interceptor,
+        @Named("chunked_disable") chunkedDisableInterceptor: Interceptor,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(bearerInterceptor)
+            .addInterceptor(chunkedDisableInterceptor)
             .addInterceptor(loggingInterceptor)
             .retryOnConnectionFailure(true)
             .followRedirects(false)

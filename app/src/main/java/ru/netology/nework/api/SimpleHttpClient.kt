@@ -40,16 +40,16 @@ class SimpleHttpClient(
                 .add("password", password)
                 .build()
 
-                   val requestBody = formBody
-                   val url = "${baseUrl}api/users/authentication".toHttpUrl()
+            val requestBody = formBody
+            val url = "${baseUrl}api/users/authentication".toHttpUrl()
                        
-                   val request = Request.Builder()
-                       .url(url)
-                       .post(requestBody)
-                       .addHeader("Accept", "application/json")
-                       .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                       .addHeader("Api-Key", apiKey)
-                       .build()
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Accept", "application/json")
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .addHeader("Api-Key", apiKey)
+                .build()
 
             val response = client.newCall(request).execute()
             Log.d("SimpleHttpClient", "Ответ сервера: code=${response.code}, isSuccessful=${response.isSuccessful}")
@@ -125,15 +125,15 @@ class SimpleHttpClient(
             Log.d("SimpleHttpClient", "FormBody содержимое: $formBodyString")
 
             val requestBody = formBody
-                   val url = "${baseUrl}api/users/registration".toHttpUrl()
+            val url = "${baseUrl}api/users/registration".toHttpUrl()
                        
-                   val request = Request.Builder()
-                       .url(url)
-                       .post(requestBody)
-                       .addHeader("Accept", "application/json")
-                       .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                       .addHeader("Api-Key", apiKey)
-                       .build()
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Accept", "application/json")
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .addHeader("Api-Key", apiKey)
+                .build()
 
             val response = client.newCall(request).execute()
             Log.d("SimpleHttpClient", "Ответ сервера: code=${response.code}, isSuccessful=${response.isSuccessful}")
@@ -170,7 +170,13 @@ class SimpleHttpClient(
                     if (body != null) {
                         val contentLength = body.contentLength()
                         Log.d("SimpleHttpClient", "Content-Length: $contentLength")
-                        body.string()
+                        // Попробуем прочитать ответ по частям
+                        val source = body.source()
+                        source.request(Long.MAX_VALUE)
+                        val buffer = source.buffer
+                        val responseBody = buffer.clone().readUtf8()
+                        Log.d("SimpleHttpClient", "Raw response body: $responseBody")
+                        responseBody
                     } else {
                         "Response body is null"
                     }
