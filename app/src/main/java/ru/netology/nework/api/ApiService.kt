@@ -7,19 +7,18 @@ import retrofit2.http.*
 import ru.netology.nework.dto.*
 
 interface ApiService {
-    @FormUrlEncoded
     @POST("api/users/authentication")
     suspend fun login(
-        @Field("login") login: String,
-        @Field("password") password: String
+        @Query("login") login: String,
+        @Query("pass") pass: String
     ): Response<AuthDto>
 
-    @FormUrlEncoded
+    @Multipart
     @POST("api/users/registration")
     suspend fun register(
-        @Field("login") login: String,
-        @Field("password") password: String,
-        @Field("name") name: String
+        @Part login: MultipartBody.Part,
+        @Part pass: MultipartBody.Part,
+        @Part name: MultipartBody.Part
     ): Response<AuthDto>
 
     @GET("api/posts")

@@ -37,7 +37,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun login(login: String, password: String): Result<AuthDto> {
         return try {
-            Log.d("AuthRepository", "Attempting login with Retrofit API (form-urlencoded)")
+            Log.d("AuthRepository", "Attempting login with Retrofit API (query params)")
             val response = apiService.login(login, password)
             
             if (response.isSuccessful) {
@@ -67,9 +67,14 @@ class AuthRepository @Inject constructor(
 
     suspend fun register(login: String, password: String, name: String): Result<AuthDto> {
         return try {
-            Log.d("AuthRepository", "Attempting registration with Retrofit API (form-urlencoded)")
+            Log.d("AuthRepository", "Attempting registration with Retrofit API (multipart)")
             Log.d("AuthRepository", "Registration data: login=$login, password=${password.take(1)}***, name=$name")
-            val response = apiService.register(login, password, name)
+            
+            val loginPart = okhttp3.MultipartBody.Part.createFormData("login", login)
+            val passPart = okhttp3.MultipartBody.Part.createFormData("pass", password)
+            val namePart = okhttp3.MultipartBody.Part.createFormData("name", name)
+            
+            val response = apiService.register(loginPart, passPart, namePart)
             
             if (response.isSuccessful) {
                 val authResponse = response.body()
