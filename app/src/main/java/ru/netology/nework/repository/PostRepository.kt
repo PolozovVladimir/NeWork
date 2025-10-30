@@ -64,8 +64,13 @@ class PostRepository @Inject constructor(
                 android.util.Log.d("PostRepository", "Post created successfully: id=${createdPost.id}")
                 Result.success(createdPost)
             } else {
-                android.util.Log.e("PostRepository", "Failed to create post: code=${response.code()}, body reading skipped to avoid EOFException")
-                Result.failure(Exception("Failed to create post: ${response.code()}"))
+                val errorBodyString = try {
+                    response.errorBody()?.string() ?: "No error body"
+                } catch (e: Exception) {
+                    "Failed to read error body: ${e.message}"
+                }
+                android.util.Log.e("PostRepository", "Failed to create post: code=${response.code()}, error: $errorBodyString")
+                Result.failure(Exception("Failed to create post: ${response.code()}. Error: $errorBodyString"))
             }
         } catch (e: Exception) {
             android.util.Log.e("PostRepository", "Exception creating post", e)

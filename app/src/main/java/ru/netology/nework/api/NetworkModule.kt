@@ -89,14 +89,25 @@ object NetworkModule {
                    android.util.Log.d("BearerInterceptor", "Token value: ${token?.take(20)}...")
                    
                    
-                   if (!token.isNullOrBlank()) {
+                   // Добавляем Bearer токен только к эндпоинтам, которые требуют авторизации
+                   val originalRequest = chain.request()
+                   val requiresAuth = url.contains("/api/posts") && originalRequest.method == "POST" ||
+                           url.contains("/api/events") && originalRequest.method == "POST" ||
+                           url.contains("/api/my/") ||
+                           url.contains("/likes") ||
+                           url.contains("/comments") && originalRequest.method == "POST" ||
+                           url.contains("/media") ||
+                           url.contains("/participants")
+
+                   if (requiresAuth && !token.isNullOrBlank()) {
                        builder.addHeader("Authorization", "Bearer $token")
-                       android.util.Log.d("BearerInterceptor", "Added Bearer token to request")
+                       android.util.Log.d("BearerInterceptor", "Added Bearer token to request (auth required)")
+                   } else if (requiresAuth) {
+                       android.util.Log.w("BearerInterceptor", "Auth required but no token available")
                    } else {
-                       android.util.Log.d("BearerInterceptor", "No token available, skipping Bearer header")
+                       android.util.Log.d("BearerInterceptor", "No auth required for this endpoint")
                    }
                    
-                   val originalRequest = chain.request()
                    android.util.Log.d("BearerInterceptor", "Request body type: ${originalRequest.body?.javaClass?.simpleName}")
                    if (originalRequest.body != null) {
                        try {
