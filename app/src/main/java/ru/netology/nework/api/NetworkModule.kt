@@ -155,57 +155,10 @@ object NetworkModule {
     fun provideChunkedDisableInterceptor(): Interceptor {
         return Interceptor { chain ->
             val originalRequest = chain.request()
-            val requestBody = originalRequest.body
-            
-            val newRequest = if (requestBody != null) {
-                val contentLength = requestBody.contentLength()
-                if (contentLength > 0) {
-                    originalRequest.newBuilder()
-                        .removeHeader("Transfer-Encoding")
-                        .addHeader("Content-Length", contentLength.toString())
-                        .addHeader("Connection", "close")
-                        .addHeader("Accept-Encoding", "identity")
-                        .build()
-                } else {
-                    originalRequest.newBuilder()
-                        .addHeader("Connection", "close")
-                        .addHeader("Accept-Encoding", "identity")
-                        .build()
-                }
-            } else {
-                originalRequest.newBuilder()
-                    .removeHeader("Transfer-Encoding")
-                    .addHeader("Content-Length", "0")
-                    .addHeader("Connection", "close")
-                    .addHeader("Accept-Encoding", "identity")
-                    .build()
-            }
-            
-            val response = chain.proceed(newRequest)
-            
-            // Принудительно обрабатываем chunked ответы
-            if (response.header("Transfer-Encoding") == "chunked") {
-                val responseBody = response.body
-                if (responseBody != null) {
-                    try {
-                        val bodyString = responseBody.string()
-                        val newResponseBody = ResponseBody.create(
-                            responseBody.contentType(),
-                            bodyString.toByteArray()
-                        )
-                        return@Interceptor response.newBuilder()
-                            .removeHeader("Transfer-Encoding")
-                            .addHeader("Content-Length", bodyString.length.toString())
-                            .body(newResponseBody)
-                            .build()
-                    } catch (e: Exception) {
-                        android.util.Log.e("ChunkedDisableInterceptor", "Error reading chunked response", e)
-                        return@Interceptor response
-                    }
-                }
-            }
-            
-            response
+            val requestBuilder = originalRequest.newBuilder()
+                .removeHeader("Transfer-Encoding")
+                .addHeader("Connection", "close")
+            chain.proceed(requestBuilder.build())
         }
     }
 
@@ -214,13 +167,11 @@ object NetworkModule {
     fun provideOkHttpClient(
         @Named("auth") authInterceptor: Interceptor,
         @Named("bearer") bearerInterceptor: Interceptor,
-        @Named("chunked_disable") chunkedDisableInterceptor: Interceptor,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(bearerInterceptor)
-            .addInterceptor(chunkedDisableInterceptor)
             .addInterceptor(loggingInterceptor)
             .retryOnConnectionFailure(true)
             .followRedirects(false)
