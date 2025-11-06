@@ -42,13 +42,25 @@ class EventRepository @Inject constructor(
 
     suspend fun createEvent(event: CreateEventRequest): Result<Event> {
         return try {
+            android.util.Log.d("EventRepository", "Creating event: content=${event.content}, datetime=${event.datetime}, type=${event.type}")
             val response = apiService.createEvent(event)
+            android.util.Log.d("EventRepository", "Create event response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
+            
             if (response.isSuccessful) {
-                Result.success(response.body()!!.toModel())
+                val createdEvent = response.body()!!.toModel()
+                android.util.Log.d("EventRepository", "Event created successfully: id=${createdEvent.id}")
+                Result.success(createdEvent)
             } else {
-                Result.failure(Exception("Failed to create event"))
+                val errorBodyString = try {
+                    response.errorBody()?.string() ?: "No error body"
+                } catch (e: Exception) {
+                    "Failed to read error body: ${e.message}"
+                }
+                android.util.Log.e("EventRepository", "Failed to create event: code=${response.code()}, error: $errorBodyString")
+                Result.failure(Exception("Failed to create event: ${response.code()}. Error: $errorBodyString"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Exception creating event", e)
             Result.failure(e)
         }
     }

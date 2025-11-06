@@ -12,6 +12,7 @@ import ru.netology.nework.api.SimpleHttpClient
 import ru.netology.nework.api.ApiService
 import ru.netology.nework.model.AuthState
 import ru.netology.nework.auth.AuthTokenStorage
+import javax.inject.Named
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,7 +20,8 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val httpClient: SimpleHttpClient,
     private val apiService: ApiService,
-    private val tokenStorage: AuthTokenStorage
+    private val tokenStorage: AuthTokenStorage,
+    @Named("api_key") private val currentApiKey: String
 ) {
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -27,9 +29,27 @@ class AuthRepository @Inject constructor(
     init {
         val savedToken = tokenStorage.token
         val savedUserId = tokenStorage.userId
+        val savedApiKey = tokenStorage.apiKey
+
+        Log.d("AuthRepository", "Init: savedToken=${savedToken?.take(10)}..., savedUserId=$savedUserId, savedApiKey=${savedApiKey?.take(10)}..., currentApiKey=${currentApiKey.take(10)}...")
+
         if (!savedToken.isNullOrBlank() && savedUserId != 0L) {
-            _authState.value = AuthState(savedUserId, savedToken)
-            Log.d("AuthRepository", "Initialized from saved token: ${savedToken.take(10)}...")
+            if (!savedApiKey.isNullOrBlank() && savedApiKey != currentApiKey) {
+                Log.e("AuthRepository", "API key changed. Clearing saved auth to avoid 403.")
+                Log.e("AuthRepository", "Saved API key: ${savedApiKey.take(20)}..., Current API key: ${currentApiKey.take(20)}...")
+                tokenStorage.clear()
+                _authState.value = AuthState()
+                Log.d("AuthRepository", "Saved token cleared due to API key change")
+            } else if (savedApiKey.isNullOrBlank()) {
+                Log.w("AuthRepository", "Token found but API key not saved. This may cause 403 errors.")
+                Log.w("AuthRepository", "Saving current API key to match token.")
+                tokenStorage.apiKey = currentApiKey
+                _authState.value = AuthState(savedUserId, savedToken)
+                Log.d("AuthRepository", "Initialized from saved token: ${savedToken.take(10)}...")
+            } else {
+                _authState.value = AuthState(savedUserId, savedToken)
+                Log.d("AuthRepository", "Initialized from saved token: ${savedToken.take(10)}...")
+            }
         } else {
             Log.d("AuthRepository", "No saved token found")
         }
@@ -45,6 +65,7 @@ class AuthRepository @Inject constructor(
                 if (authResponse != null) {
                     tokenStorage.userId = authResponse.id
                     tokenStorage.token = authResponse.token
+                    tokenStorage.apiKey = currentApiKey
                     _authState.value = AuthState(authResponse.id, authResponse.token)
                     Log.d("AuthRepository", "Login successful, token saved: ${authResponse.token}")
                     Log.d("AuthRepository", "User ID saved: ${authResponse.id}")
@@ -81,8 +102,10 @@ class AuthRepository @Inject constructor(
                 if (authResponse != null) {
                     tokenStorage.userId = authResponse.id
                     tokenStorage.token = authResponse.token
+                    tokenStorage.apiKey = currentApiKey
                     _authState.value = AuthState(authResponse.id, authResponse.token)
                     Log.d("AuthRepository", "Registration successful, token saved: ${authResponse.token}")
+                    Log.d("AuthRepository", "API Key saved: ${currentApiKey.take(10)}...")
                     Result.success(authResponse)
                 } else {
                     Log.e("AuthRepository", "Registration response body is null")

@@ -22,6 +22,12 @@ class AuthTokenStorage @Inject constructor(
             preferences.edit().putString(KEY_TOKEN, value).apply()
         }
 
+    var apiKey: String?
+        get() = preferences.getString(KEY_API_KEY, null)
+        set(value) {
+            preferences.edit().putString(KEY_API_KEY, value).apply()
+        }
+
     var userId: Long
         get() = preferences.getLong(KEY_USER_ID, 0L)
         set(value) {
@@ -35,6 +41,7 @@ class AuthTokenStorage @Inject constructor(
     private companion object {
         private const val KEY_TOKEN = "token"
         private const val KEY_USER_ID = "user_id"
+        private const val KEY_API_KEY = "api_key"
     }
 }
 

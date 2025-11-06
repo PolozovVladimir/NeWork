@@ -84,17 +84,34 @@ object NetworkModule {
            @Provides
            @Singleton
            @Named("bearer")
-           fun provideBearerInterceptor(tokenStorage: AuthTokenStorage): Interceptor {
+           fun provideBearerInterceptor(
+               tokenStorage: AuthTokenStorage,
+               @Named("api_key") currentApiKey: String
+           ): Interceptor {
                return Interceptor { chain ->
                    val originalRequest = chain.request()
                    val url = originalRequest.url.toString()
                    val method = originalRequest.method
                    val token = tokenStorage.token
+                   val storedApiKey = tokenStorage.apiKey
                    
                    android.util.Log.d("BearerInterceptor", "Request: $method $url")
                    android.util.Log.d("BearerInterceptor", "Token available: ${!token.isNullOrBlank()}")
+                   android.util.Log.d("BearerInterceptor", "API Key stored: ${!storedApiKey.isNullOrBlank()}")
+                   android.util.Log.d("BearerInterceptor", "Current API Key: ${currentApiKey.take(20)}...")
                    if (!token.isNullOrBlank()) {
                        android.util.Log.d("BearerInterceptor", "Token preview: ${token.take(20)}...")
+                   }
+                   if (!storedApiKey.isNullOrBlank()) {
+                       android.util.Log.d("BearerInterceptor", "Stored API Key preview: ${storedApiKey.take(20)}...")
+                   }
+                   
+                   val apiKeyMismatch = !storedApiKey.isNullOrBlank() && storedApiKey != currentApiKey
+                   if (apiKeyMismatch) {
+                       android.util.Log.e("BearerInterceptor", "WARNING: Stored API key does not match current API key!")
+                       android.util.Log.e("BearerInterceptor", "Stored: ${storedApiKey?.take(30) ?: "null"}...")
+                       android.util.Log.e("BearerInterceptor", "Current: ${currentApiKey.take(30)}...")
+                       android.util.Log.e("BearerInterceptor", "This may cause 403 Forbidden errors")
                    }
                    
                    val requiresAuth = (url.contains("/api/posts") && method == "POST") ||
@@ -111,20 +128,25 @@ object NetworkModule {
                    
                    if (requiresAuth) {
                        if (!token.isNullOrBlank()) {
-                           builder.addHeader("Authorization", "Bearer $token")
+                           // Убедимся, что токен не содержит лишних пробелов
+                           val cleanToken = token.trim()
+                           builder.addHeader("Authorization", "Bearer $cleanToken")
                            android.util.Log.d("BearerInterceptor", "Added Authorization: Bearer header")
+                           android.util.Log.d("BearerInterceptor", "Full Authorization header: Bearer ${cleanToken.take(50)}...")
+                           android.util.Log.d("BearerInterceptor", "Token length: ${cleanToken.length}")
                        } else {
                            android.util.Log.e("BearerInterceptor", "ERROR: Auth required but token is null or blank!")
+                           android.util.Log.e("BearerInterceptor", "This will likely cause a 403 Forbidden error")
                        }
                    }
                    
                    val request = builder.build()
                    android.util.Log.d("BearerInterceptor", "Final request headers:")
                    request.headers.forEach { header ->
-                       if (header.first == "Authorization") {
-                           android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second.take(27)}...")
-                       } else {
-                           android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second}")
+                       when (header.first) {
+                           "Authorization" -> android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second.take(27)}...")
+                           "Api-Key" -> android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second.take(20)}...")
+                           else -> android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second}")
                        }
                    }
                    
@@ -136,6 +158,17 @@ object NetworkModule {
                            android.util.Log.e("BearerInterceptor", "Request failed: ${response.code}")
                            if (response.code == 403) {
                                android.util.Log.e("BearerInterceptor", "403 Forbidden - check token and API key")
+                               android.util.Log.e("BearerInterceptor", "Token was: ${if (!token.isNullOrBlank()) "${token.take(20)}..." else "null or blank"}")
+                               android.util.Log.e("BearerInterceptor", "Stored API Key was: ${if (!storedApiKey.isNullOrBlank()) "${storedApiKey.take(20)}..." else "null or blank"}")
+                               android.util.Log.e("BearerInterceptor", "Current API Key is: ${currentApiKey.take(20)}...")
+                               android.util.Log.e("BearerInterceptor", "API Key mismatch: $apiKeyMismatch")
+                               try {
+                                   val errorBody = response.peekBody(1024).string()
+                                   android.util.Log.e("BearerInterceptor", "Error response body: $errorBody")
+                               } catch (e: Exception) {
+                                   android.util.Log.e("BearerInterceptor", "Could not read error body", e)
+                               }
+                               android.util.Log.e("BearerInterceptor", "SUGGESTION: Try logging out and logging in again to get a fresh token")
                            }
                        }
                        
