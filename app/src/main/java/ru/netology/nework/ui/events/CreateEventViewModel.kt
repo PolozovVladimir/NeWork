@@ -33,7 +33,7 @@ class CreateEventViewModel @Inject constructor(
             val coordsDto = coords?.let {
                 ru.netology.nework.dto.CoordinatesDto(
                     lat = it.lat,
-                    lng = it.lng
+                    long = it.lng
                 )
             }
             

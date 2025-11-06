@@ -26,7 +26,7 @@ fun PostDto.toModel(): Post = Post(
 
 fun CoordinatesDto.toModel(): Coordinates = Coordinates(
     lat = lat,
-    lng = lng
+    lng = long
 )
 
 fun AttachmentDto.toModel(): Attachment = Attachment(

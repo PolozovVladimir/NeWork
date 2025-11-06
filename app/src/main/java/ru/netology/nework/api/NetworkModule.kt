@@ -47,28 +47,34 @@ object NetworkModule {
            @Named("auth")
            fun provideAuthInterceptor(@Named("api_key") apiKey: String): Interceptor {
                return Interceptor { chain ->
-                   val originalUrl = chain.request().url.toString()
-                   android.util.Log.d("AuthInterceptor", "Request to: $originalUrl")
-                   android.util.Log.d("AuthInterceptor", "API Key: ${apiKey.take(10)}...")
+                   val originalRequest = chain.request()
+                   val url = originalRequest.url.toString()
+                   val method = originalRequest.method
                    
-                   val newUrl = chain.request().url
-                       
-                   val request = chain.request().newBuilder()
-                       .url(newUrl)
+                   android.util.Log.d("AuthInterceptor", "Request: $method $url")
+                   android.util.Log.d("AuthInterceptor", "API Key preview: ${apiKey.take(10)}...")
+                   
+                   val request = originalRequest.newBuilder()
                        .addHeader("Accept", "application/json")
                        .addHeader("User-Agent", "NeWork-Android-App")
                        .addHeader("Connection", "keep-alive")
                        .addHeader("Api-Key", apiKey)
                        .build()
                        
-                   android.util.Log.d("AuthInterceptor", "Request headers: ${request.headers}")
+                   android.util.Log.d("AuthInterceptor", "Request headers:")
+                   request.headers.forEach { header ->
+                       if (header.first == "Api-Key") {
+                           android.util.Log.d("AuthInterceptor", "  ${header.first}: ${header.second.take(10)}...")
+                       } else {
+                           android.util.Log.d("AuthInterceptor", "  ${header.first}: ${header.second}")
+                       }
+                   }
                    
                    val response = chain.proceed(request)
-                   android.util.Log.d("AuthInterceptor", "Response code: ${response.code}")
-                   android.util.Log.d("AuthInterceptor", "Response headers: ${response.headers}")
+                   android.util.Log.d("AuthInterceptor", "Response: ${response.code} ${response.message}")
                    
                    if (response.code == 403) {
-                       android.util.Log.e("AuthInterceptor", "403 Forbidden - API key or authentication issue")
+                       android.util.Log.e("AuthInterceptor", "403 Forbidden - check API key and Bearer token")
                    }
                    
                    response
@@ -80,57 +86,57 @@ object NetworkModule {
            @Named("bearer")
            fun provideBearerInterceptor(tokenStorage: AuthTokenStorage): Interceptor {
                return Interceptor { chain ->
-                   val builder = chain.request().newBuilder()
-                   val token = tokenStorage.token
-                   val url = chain.request().url.toString()
-                   
-                   android.util.Log.d("BearerInterceptor", "Request to: $url")
-                   android.util.Log.d("BearerInterceptor", "Token available: ${!token.isNullOrBlank()}")
-                   android.util.Log.d("BearerInterceptor", "Token value: ${token?.take(20)}...")
-                   
-                   
-                   // Добавляем Bearer токен только к эндпоинтам, которые требуют авторизации
                    val originalRequest = chain.request()
-                   val requiresAuth = url.contains("/api/posts") && originalRequest.method == "POST" ||
-                           url.contains("/api/events") && originalRequest.method == "POST" ||
-                           url.contains("/api/my/") ||
-                           url.contains("/likes") ||
-                           url.contains("/comments") && originalRequest.method == "POST" ||
-                           url.contains("/media") ||
-                           url.contains("/participants")
-
-                   if (requiresAuth && !token.isNullOrBlank()) {
-                       builder.addHeader("Authorization", "Bearer $token")
-                       android.util.Log.d("BearerInterceptor", "Added Bearer token to request (auth required)")
-                   } else if (requiresAuth) {
-                       android.util.Log.w("BearerInterceptor", "Auth required but no token available")
-                   } else {
-                       android.util.Log.d("BearerInterceptor", "No auth required for this endpoint")
+                   val url = originalRequest.url.toString()
+                   val method = originalRequest.method
+                   val token = tokenStorage.token
+                   
+                   android.util.Log.d("BearerInterceptor", "Request: $method $url")
+                   android.util.Log.d("BearerInterceptor", "Token available: ${!token.isNullOrBlank()}")
+                   if (!token.isNullOrBlank()) {
+                       android.util.Log.d("BearerInterceptor", "Token preview: ${token.take(20)}...")
                    }
                    
-                   android.util.Log.d("BearerInterceptor", "Request body type: ${originalRequest.body?.javaClass?.simpleName}")
-                   if (originalRequest.body != null) {
-                       try {
-                           val buffer = okio.Buffer()
-                           originalRequest.body!!.writeTo(buffer)
-                           val bodyString = buffer.readUtf8()
-                           android.util.Log.d("BearerInterceptor", "Request body: $bodyString")
-                       } catch (e: Exception) {
-                           android.util.Log.e("BearerInterceptor", "Failed to read request body", e)
+                   val requiresAuth = (url.contains("/api/posts") && method == "POST") ||
+                           (url.contains("/api/events") && method == "POST") ||
+                           url.contains("/api/my/") ||
+                           url.contains("/likes") ||
+                           (url.contains("/comments") && method == "POST") ||
+                           url.contains("/api/media") ||
+                           url.contains("/participants")
+
+                   android.util.Log.d("BearerInterceptor", "Requires auth: $requiresAuth")
+                   
+                   val builder = originalRequest.newBuilder()
+                   
+                   if (requiresAuth) {
+                       if (!token.isNullOrBlank()) {
+                           builder.addHeader("Authorization", "Bearer $token")
+                           android.util.Log.d("BearerInterceptor", "Added Authorization: Bearer header")
+                       } else {
+                           android.util.Log.e("BearerInterceptor", "ERROR: Auth required but token is null or blank!")
                        }
                    }
                    
                    val request = builder.build()
-                   android.util.Log.d("BearerInterceptor", "Request headers: ${request.headers}")
+                   android.util.Log.d("BearerInterceptor", "Final request headers:")
+                   request.headers.forEach { header ->
+                       if (header.first == "Authorization") {
+                           android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second.take(27)}...")
+                       } else {
+                           android.util.Log.d("BearerInterceptor", "  ${header.first}: ${header.second}")
+                       }
+                   }
                    
                    try {
                        val response = chain.proceed(request)
-                       android.util.Log.d("BearerInterceptor", "Response code: ${response.code}")
-                       android.util.Log.d("BearerInterceptor", "Response headers: ${response.headers}")
+                       android.util.Log.d("BearerInterceptor", "Response: ${response.code} ${response.message}")
                        
                        if (!response.isSuccessful) {
-                           android.util.Log.e("BearerInterceptor", "Request failed with code: ${response.code}")
-                           // Не пытаемся читать тело ответа, чтобы избежать EOFException
+                           android.util.Log.e("BearerInterceptor", "Request failed: ${response.code}")
+                           if (response.code == 403) {
+                               android.util.Log.e("BearerInterceptor", "403 Forbidden - check token and API key")
+                           }
                        }
                        
                        response
@@ -145,7 +151,7 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.NONE
+            level = HttpLoggingInterceptor.Level.BODY
         }
     }
 

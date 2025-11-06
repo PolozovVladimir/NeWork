@@ -12,13 +12,15 @@ import ru.netology.nework.model.Attachment
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.repository.MediaRepository
 import ru.netology.nework.repository.PostRepository
+import ru.netology.nework.auth.AuthTokenStorage
 import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class CreatePostViewModel @Inject constructor(
     private val postRepository: PostRepository,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
+    private val tokenStorage: AuthTokenStorage
 ) : ViewModel() {
 
     private val _postCreated = MutableLiveData(false)
@@ -33,7 +35,15 @@ class CreatePostViewModel @Inject constructor(
     fun createPost(content: String, link: String? = null, attachment: ru.netology.nework.model.Attachment? = null, coordinates: ru.netology.nework.model.Coordinates? = null) {
         viewModelScope.launch {
             try {
+                val token = tokenStorage.token
                 android.util.Log.d("CreatePostViewModel", "Creating post: content=$content, link=$link")
+                android.util.Log.d("CreatePostViewModel", "Token available: ${!token.isNullOrBlank()}")
+                if (token.isNullOrBlank()) {
+                    android.util.Log.e("CreatePostViewModel", "ERROR: No token available! User must be authenticated.")
+                    _error.value = "Ошибка: необходимо авторизоваться"
+                    return@launch
+                }
+                android.util.Log.d("CreatePostViewModel", "Token preview: ${token.take(20)}...")
                 
                 val attachmentDto = attachment?.let {
                     AttachmentDto(
@@ -45,7 +55,7 @@ class CreatePostViewModel @Inject constructor(
                 val coordsDto = coordinates?.let {
                     ru.netology.nework.dto.CoordinatesDto(
                         lat = it.lat,
-                        lng = it.lng
+                        long = it.lng
                     )
                 }
 
