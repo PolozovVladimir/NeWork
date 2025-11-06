@@ -1,8 +1,11 @@
 package ru.netology.nework.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class CoordinatesDto(
     val lat: Double,
-    val lng: Double
+    @SerializedName("long")
+    val long: Double
 )
 
 
