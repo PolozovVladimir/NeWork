@@ -1,10 +1,16 @@
 package ru.netology.nework.repository
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nework.dto.AuthDto
 import ru.netology.nework.dto.AuthRequest
 import ru.netology.nework.dto.RegisterRequest
@@ -12,6 +18,8 @@ import ru.netology.nework.api.SimpleHttpClient
 import ru.netology.nework.api.ApiService
 import ru.netology.nework.model.AuthState
 import ru.netology.nework.auth.AuthTokenStorage
+import ru.netology.nework.util.MediaUtils
+import java.io.File
 import javax.inject.Named
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,7 +29,8 @@ class AuthRepository @Inject constructor(
     private val httpClient: SimpleHttpClient,
     private val apiService: ApiService,
     private val tokenStorage: AuthTokenStorage,
-    @Named("api_key") private val currentApiKey: String
+    @Named("api_key") private val currentApiKey: String,
+    @ApplicationContext private val context: Context
 ) {
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -86,16 +95,33 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun register(login: String, password: String, name: String): Result<AuthDto> {
+    suspend fun register(login: String, password: String, name: String, avatarUri: Uri? = null): Result<AuthDto> {
         return try {
             Log.d("AuthRepository", "Attempting registration with Retrofit API (multipart)")
-            Log.d("AuthRepository", "Registration data: login=$login, password=${password.take(1)}***, name=$name")
+            Log.d("AuthRepository", "Registration data: login=$login, password=${password.take(1)}***, name=$name, hasAvatar=${avatarUri != null}")
             
             val loginPart = okhttp3.MultipartBody.Part.createFormData("login", login)
             val passPart = okhttp3.MultipartBody.Part.createFormData("pass", password)
             val namePart = okhttp3.MultipartBody.Part.createFormData("name", name)
             
-            val response = apiService.register(loginPart, passPart, namePart)
+            val response = if (avatarUri != null) {
+                try {
+                    val file = MediaUtils.copyFileToCache(context, avatarUri)
+                    if (file != null) {
+                        val requestBody = file.asRequestBody("image/*".toMediaType())
+                        val filePart = okhttp3.MultipartBody.Part.createFormData("file", file.name, requestBody)
+                        apiService.registerWithAvatar(loginPart, passPart, namePart, filePart)
+                    } else {
+                        Log.w("AuthRepository", "Failed to copy avatar file to cache, registering without avatar")
+                        apiService.register(loginPart, passPart, namePart)
+                    }
+                } catch (e: Exception) {
+                    Log.e("AuthRepository", "Error processing avatar file, registering without avatar", e)
+                    apiService.register(loginPart, passPart, namePart)
+                }
+            } else {
+                apiService.register(loginPart, passPart, namePart)
+            }
             
             if (response.isSuccessful) {
                 val authResponse = response.body()

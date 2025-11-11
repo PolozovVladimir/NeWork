@@ -58,7 +58,10 @@ object NetworkModule {
                        .addHeader("Accept", "application/json")
                        .addHeader("User-Agent", "NeWork-Android-App")
                        .addHeader("Connection", "keep-alive")
-                       .addHeader("Api-Key", apiKey)
+                       .removeHeader("Api-Key")
+                       .removeHeader("api-key")
+                       .removeHeader("API-KEY")
+                       .header("Api-Key", apiKey)
                        .build()
                        
                    android.util.Log.d("AuthInterceptor", "Request headers:")
@@ -114,13 +117,15 @@ object NetworkModule {
                        android.util.Log.e("BearerInterceptor", "This may cause 403 Forbidden errors")
                    }
                    
-                   val requiresAuth = (url.contains("/api/posts") && method == "POST") ||
-                           (url.contains("/api/events") && method == "POST") ||
+                   val requiresAuth = 
+                           (url.contains("/api/posts") && (method == "POST" || method == "DELETE")) ||
+                           (url.contains("/api/events") && (method == "POST" || method == "DELETE")) ||
                            url.contains("/api/my/") ||
                            url.contains("/likes") ||
-                           (url.contains("/comments") && method == "POST") ||
+                           (url.contains("/comments") && (method == "POST" || method == "DELETE")) ||
                            url.contains("/api/media") ||
-                           url.contains("/participants")
+                           url.contains("/participants") ||
+                           (url.contains("/wall/") && url.contains("/likes") && (method == "POST" || method == "DELETE"))
 
                    android.util.Log.d("BearerInterceptor", "Requires auth: $requiresAuth")
                    
@@ -128,11 +133,14 @@ object NetworkModule {
                    
                    if (requiresAuth) {
                        if (!token.isNullOrBlank()) {
-                           // Убедимся, что токен не содержит лишних пробелов
                            val cleanToken = token.trim()
-                           builder.addHeader("Authorization", "Bearer $cleanToken")
-                           android.util.Log.d("BearerInterceptor", "Added Authorization: Bearer header")
-                           android.util.Log.d("BearerInterceptor", "Full Authorization header: Bearer ${cleanToken.take(50)}...")
+                           val authHeader = cleanToken
+                           builder.removeHeader("Authorization")
+                           builder.removeHeader("authorization")
+                           builder.removeHeader("AUTHORIZATION")
+                           builder.header("Authorization", authHeader)
+                           android.util.Log.d("BearerInterceptor", "Set Authorization header (without Bearer prefix)")
+                           android.util.Log.d("BearerInterceptor", "Authorization header value: ${authHeader.take(20)}...")
                            android.util.Log.d("BearerInterceptor", "Token length: ${cleanToken.length}")
                        } else {
                            android.util.Log.e("BearerInterceptor", "ERROR: Auth required but token is null or blank!")

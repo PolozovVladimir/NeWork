@@ -15,6 +15,7 @@ data class PostDto(
     val likeOwnerIds: List<Long> = emptyList(),
     val likedByMe: Boolean = false,
     val attachment: AttachmentDto? = null,
+    val users: Map<String, UserPreviewDto> = emptyMap(),
     val ownedByMe: Boolean = false
 )
 

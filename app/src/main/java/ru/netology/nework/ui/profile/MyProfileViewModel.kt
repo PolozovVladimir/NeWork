@@ -37,7 +37,6 @@ class MyProfileViewModel @Inject constructor(
                     }
                     .onFailure { exception ->
                         android.util.Log.e("MyProfileViewModel", "Failed to load user profile", exception)
-                        // Создаем fallback пользователя с базовой информацией
                         val fallbackUser = User(
                             id = currentUserId,
                             login = "user",

@@ -76,7 +76,7 @@ class RegisterFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            viewModel.register(login, password, name)
+            viewModel.register(login, password, name, selectedAvatarUri)
         }
 
         binding.loginButton.setOnClickListener {

@@ -85,7 +85,7 @@ class PostsAdapter(
                 likeButton.setOnClickListener { onLikeClick(post) }
                 if (post.ownedByMe) {
                     menuButton.visibility = android.view.View.VISIBLE
-                    menuButton.setOnClickListener { view -> onMenuClick(view, post) }
+                menuButton.setOnClickListener { view -> onMenuClick(view, post) }
                 } else {
                     menuButton.visibility = android.view.View.GONE
                     menuButton.setOnClickListener(null)

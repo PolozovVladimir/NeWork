@@ -94,38 +94,60 @@ class PostRepository @Inject constructor(
 
     suspend fun likePost(id: Long): Result<Post> {
         return try {
+            android.util.Log.d("PostRepository", "Liking post: id=$id")
             val response = apiService.likePost(id)
+            android.util.Log.d("PostRepository", "Like post response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
-                Result.success(response.body()!!.toModel())
+                val updatedPost = response.body()!!.toModel()
+                android.util.Log.d("PostRepository", "Post liked successfully: id=${updatedPost.id}, likedByMe=${updatedPost.likedByMe}, likeCount=${updatedPost.likeOwnerIds.size}")
+                Result.success(updatedPost)
             } else {
                 val code = response.code()
+                val errorBodyString = try {
+                    response.errorBody()?.string() ?: "No error body"
+                } catch (e: Exception) {
+                    "Failed to read error body: ${e.message}"
+                }
                 val error = when (code) {
                     401 -> "Не авторизован (401)"
                     403 -> "Доступ запрещен (403)"
                     else -> "Ошибка лайка: code=$code"
                 }
-                Result.failure(Exception(error))
+                android.util.Log.e("PostRepository", "Failed to like post: code=$code, error: $errorBodyString")
+                Result.failure(Exception("$error. Details: $errorBodyString"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("PostRepository", "Exception liking post", e)
             Result.failure(e)
         }
     }
 
     suspend fun unlikePost(id: Long): Result<Post> {
         return try {
+            android.util.Log.d("PostRepository", "Unliking post: id=$id")
             val response = apiService.unlikePost(id)
+            android.util.Log.d("PostRepository", "Unlike post response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
-                Result.success(response.body()!!.toModel())
+                val updatedPost = response.body()!!.toModel()
+                android.util.Log.d("PostRepository", "Post unliked successfully: id=${updatedPost.id}, likedByMe=${updatedPost.likedByMe}, likeCount=${updatedPost.likeOwnerIds.size}")
+                Result.success(updatedPost)
             } else {
                 val code = response.code()
+                val errorBodyString = try {
+                    response.errorBody()?.string() ?: "No error body"
+                } catch (e: Exception) {
+                    "Failed to read error body: ${e.message}"
+                }
                 val error = when (code) {
                     401 -> "Не авторизован (401)"
                     403 -> "Доступ запрещен (403)"
                     else -> "Ошибка снятия лайка: code=$code"
                 }
-                Result.failure(Exception(error))
+                android.util.Log.e("PostRepository", "Failed to unlike post: code=$code, error: $errorBodyString")
+                Result.failure(Exception("$error. Details: $errorBodyString"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("PostRepository", "Exception unliking post", e)
             Result.failure(e)
         }
     }

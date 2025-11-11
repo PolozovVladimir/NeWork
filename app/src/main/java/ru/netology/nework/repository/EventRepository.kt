@@ -81,26 +81,48 @@ class EventRepository @Inject constructor(
 
     suspend fun likeEvent(id: Long): Result<Event> {
         return try {
+            android.util.Log.d("EventRepository", "Liking event: id=$id")
             val response = apiService.likeEvent(id)
+            android.util.Log.d("EventRepository", "Like event response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
-                Result.success(response.body()!!.toModel())
+                val updatedEvent = response.body()!!.toModel()
+                android.util.Log.d("EventRepository", "Event liked successfully: id=${updatedEvent.id}, likedByMe=${updatedEvent.likedByMe}, likeCount=${updatedEvent.likeOwnerIds.size}")
+                Result.success(updatedEvent)
             } else {
-                Result.failure(Exception("Failed to like event"))
+                val errorBodyString = try {
+                    response.errorBody()?.string() ?: "No error body"
+                } catch (e: Exception) {
+                    "Failed to read error body: ${e.message}"
+                }
+                android.util.Log.e("EventRepository", "Failed to like event: code=${response.code()}, error: $errorBodyString")
+                Result.failure(Exception("Failed to like event: ${response.code()}. Error: $errorBodyString"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Exception liking event", e)
             Result.failure(e)
         }
     }
 
     suspend fun unlikeEvent(id: Long): Result<Event> {
         return try {
+            android.util.Log.d("EventRepository", "Unliking event: id=$id")
             val response = apiService.unlikeEvent(id)
+            android.util.Log.d("EventRepository", "Unlike event response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
-                Result.success(response.body()!!.toModel())
+                val updatedEvent = response.body()!!.toModel()
+                android.util.Log.d("EventRepository", "Event unliked successfully: id=${updatedEvent.id}, likedByMe=${updatedEvent.likedByMe}, likeCount=${updatedEvent.likeOwnerIds.size}")
+                Result.success(updatedEvent)
             } else {
-                Result.failure(Exception("Failed to unlike event"))
+                val errorBodyString = try {
+                    response.errorBody()?.string() ?: "No error body"
+                } catch (e: Exception) {
+                    "Failed to read error body: ${e.message}"
+                }
+                android.util.Log.e("EventRepository", "Failed to unlike event: code=${response.code()}, error: $errorBodyString")
+                Result.failure(Exception("Failed to unlike event: ${response.code()}. Error: $errorBodyString"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Exception unliking event", e)
             Result.failure(e)
         }
     }

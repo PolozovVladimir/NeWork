@@ -22,10 +22,10 @@ class RegisterViewModel @Inject constructor(
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
-    fun register(login: String, password: String, name: String) {
-        Log.d("RegisterViewModel", "Начало регистрации: login=$login, name=$name")
+    fun register(login: String, password: String, name: String, avatarUri: android.net.Uri? = null) {
+        Log.d("RegisterViewModel", "Начало регистрации: login=$login, name=$name, hasAvatar=${avatarUri != null}")
         viewModelScope.launch {
-            authRepository.register(login, password, name)
+            authRepository.register(login, password, name, avatarUri)
                 .onSuccess { authDto ->
                     Log.d("RegisterViewModel", "Регистрация успешна: id=${authDto.id}")
                 }

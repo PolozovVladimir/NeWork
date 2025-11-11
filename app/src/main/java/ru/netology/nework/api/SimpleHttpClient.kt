@@ -116,7 +116,6 @@ class SimpleHttpClient(
                 .add("name", name)
                 .build()
 
-            // Логируем содержимое FormBody для отладки
             val formBodyString = buildString {
                 for (i in 0 until formBody.size) {
                     append("${formBody.name(i)}=${formBody.value(i)}&")
@@ -170,7 +169,6 @@ class SimpleHttpClient(
                     if (body != null) {
                         val contentLength = body.contentLength()
                         Log.d("SimpleHttpClient", "Content-Length: $contentLength")
-                        // Попробуем прочитать ответ по частям
                         val source = body.source()
                         source.request(Long.MAX_VALUE)
                         val buffer = source.buffer

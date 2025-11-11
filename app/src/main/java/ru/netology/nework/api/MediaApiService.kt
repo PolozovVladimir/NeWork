@@ -11,6 +11,6 @@ interface MediaApiService {
     
     @Multipart
     @POST("api/media")
-    suspend fun uploadMedia(@Part media: MultipartBody.Part): Response<MediaResponse>
+    suspend fun uploadMedia(@Part file: MultipartBody.Part): Response<MediaResponse>
 }
 

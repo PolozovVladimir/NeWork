@@ -17,6 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentCreateEventBinding
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @AndroidEntryPoint
@@ -189,7 +192,20 @@ class CreateEventFragment : Fragment() {
         val linkToSave = if (link.isBlank()) null else link
 
         val eventType = if (binding.onlineRadio.isChecked) "ONLINE" else "OFFLINE"
-        val datetime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(selectedDateTime!!)
+        val datetime = try {
+            val instant = selectedDateTime!!.toInstant()
+            val formatted = DateTimeFormatter.ISO_INSTANT.format(instant)
+            android.util.Log.d("CreateEventFragment", "Formatted datetime (ISO_INSTANT): $formatted")
+            formatted
+        } catch (e: Exception) {
+            android.util.Log.e("CreateEventFragment", "Error formatting datetime with ISO_INSTANT, using fallback", e)
+            val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val formatted = formatter.format(selectedDateTime!!) + "Z"
+            android.util.Log.d("CreateEventFragment", "Formatted datetime (fallback): $formatted")
+            formatted
+        }
 
         viewModel.createEvent(
             content = content,
